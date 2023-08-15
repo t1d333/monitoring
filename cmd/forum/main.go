@@ -5,6 +5,7 @@ import (
 	"os"
 
 	"github.com/jackc/pgx/v5/pgxpool"
+	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"github.com/qiangxue/fasthttp-routing"
 	"github.com/spf13/viper"
 
@@ -30,6 +31,9 @@ import (
 
 	"github.com/t1d333/vk_edu_db_project/internal/pkg/configs"
 	"github.com/valyala/fasthttp"
+	"github.com/valyala/fasthttp/fasthttpadaptor"
+
+	// "github.com/valyala/fasthttp/fasthttpadaptor"
 	"go.uber.org/zap"
 )
 
@@ -61,6 +65,11 @@ func main() {
 	router.Use(func(ctx *routing.Context) error {
 		logger.Info("New request", zap.String("Method", string(ctx.Method())), zap.String("URI", string(ctx.URI().RequestURI())))
 		return ctx.Next()
+	})
+
+	router.Any("/metrics", func(ctx *routing.Context) error {
+		fasthttpadaptor.NewFastHTTPHandler(promhttp.Handler())(ctx.RequestCtx)
+		return ctx.RequestCtx.Err()
 	})
 
 	userRep := userRepository.NewRepository(logger, conn)
