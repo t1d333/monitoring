@@ -1,6 +1,5 @@
 #docker-compose.yml
-version: "2"
-	
+version: "3"
 services:
   exporter:
     image: "bitnami/node-exporter"
@@ -14,6 +13,8 @@ services:
       - monitoring
     ports:
       - "3000:3000"
+    volumes:
+      - grafana_data:/var/lib/grafana
   prometheus:
     image: "bitnami/prometheus"
     networks:
@@ -21,7 +22,8 @@ services:
     ports:
       - "9090:9090"
     volumes:
-      - "./configs/prometheus.yml:/opt/bitnami/prometheus/conf/prometheus.yml"
+      - prometheus_data:/opt/bitnami/prometheus/data
+      - ./configs/prometheus.yml:/opt/bitnami/prometheus/conf/prometheus.yml
   forum:
     build: .
     networks:
@@ -31,4 +33,6 @@ services:
 networks:
   monitoring:
     driver: bridge
-
+volumes:
+  prometheus_data:
+  grafana_data:
