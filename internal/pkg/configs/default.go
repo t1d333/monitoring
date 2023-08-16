@@ -7,8 +7,8 @@ import (
 )
 
 func init() {
-    SetDefaultPostgresConfig()
-    SetDefaultServerConfig()
+	SetDefaultPostgresConfig()
+	SetDefaultServerConfig()
 }
 
 func InitConfig() {
@@ -17,7 +17,7 @@ func InitConfig() {
 	viper.AddConfigPath("$HOME/vk_edu_db_project/configs")
 	viper.AddConfigPath("/forum/configs")
 	if err := viper.ReadInConfig(); err != nil {
-        fmt.Println(err)
+		fmt.Println(err)
 	}
 }
 
@@ -29,8 +29,9 @@ func SetDefaultPostgresConfig() {
 	viper.SetDefault("db.password", "password")
 }
 
-
 func SetDefaultServerConfig() {
-	viper.SetDefault("host", "127.0.0.1")
-    viper.SetDefault("port", "5000")
+	viper.SetDefault("host", "forum")
+	viper.SetDefault("port", "5000")
+	viper.SetDefault("metrics_host", "forum")
+	viper.SetDefault("metrics_port", "8080")
 }

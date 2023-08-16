@@ -5,9 +5,10 @@ import (
 	"os"
 
 	"github.com/jackc/pgx/v5/pgxpool"
-	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"github.com/qiangxue/fasthttp-routing"
 	"github.com/spf13/viper"
+
+	"github.com/t1d333/vk_edu_db_project/internal/metrics"
 
 	userDelivery "github.com/t1d333/vk_edu_db_project/internal/user/delivery/http"
 	userRepository "github.com/t1d333/vk_edu_db_project/internal/user/repository/postgres"
@@ -31,9 +32,7 @@ import (
 
 	"github.com/t1d333/vk_edu_db_project/internal/pkg/configs"
 	"github.com/valyala/fasthttp"
-	"github.com/valyala/fasthttp/fasthttpadaptor"
 
-	// "github.com/valyala/fasthttp/fasthttpadaptor"
 	"go.uber.org/zap"
 )
 
@@ -67,10 +66,7 @@ func main() {
 		return ctx.Next()
 	})
 
-	router.Any("/metrics", func(ctx *routing.Context) error {
-		fasthttpadaptor.NewFastHTTPHandler(promhttp.Handler())(ctx.RequestCtx)
-		return ctx.RequestCtx.Err()
-	})
+	router.Use(metrics.MetricsMiddleware)
 
 	userRep := userRepository.NewRepository(logger, conn)
 	userServ := userService.NewService(logger, userRep)
@@ -92,9 +88,16 @@ func main() {
 	servServ := serviceService.NewService(logger, servRep)
 	serviceDelivery.RegisterHandlers(router, logger, servServ)
 
+	// start metrics
+	metricsPort := viper.GetString("metrics_port")
+	metricsHost := viper.GetString("metrics_host")
+
+	logger.Info("Starting metrics server...")
+	go metrics.ServeMetrics(metricsHost + ":" + metricsPort)
+
 	port := viper.GetString("port")
 
-	logger.Info("Server starting on port: " + port)
+	logger.Info("Starting server on port: " + port + "...")
 	if err := fasthttp.ListenAndServe(":"+port, router.HandleRequest); err != nil {
 		logger.Fatal("Failed to start server", zap.Error(err))
 	}
